@@ -3,8 +3,9 @@ var Schema = mongoose.Schema;
 
 var eventSchema = new Schema({
     pid: Number,
-    title: String,
+    title: String,    
     subtitle: String,
+    host: String,
     content: String,
     content_detail: String,    
     date: { type: Date, default: Date.now  },

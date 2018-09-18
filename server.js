@@ -19,6 +19,7 @@ db.once('open', function(){
     console.log("Connected to mongod server");
 });
 
+//mongoose.connect('mongodb://ec2-52-78-138-9.ap-northeast-2.compute.amazonaws.com/local');
 mongoose.connect('mongodb://localhost/local');
 
 // DEFINE MODEL
@@ -37,7 +38,7 @@ console.log('뷰 엔진이 ejs로 설정되었습니다.');
 app.use(express.static('public'));
 
 // [CONFIGURE SERVER PORT]
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 80;
 
 // [CONFIGURE ROUTER]
 var router = require('./routes')(app, Event);

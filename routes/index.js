@@ -21,7 +21,7 @@ module.exports = function(app, Event)
             if(err) return res.status(500).send({error: 'database failure'});
             res.json(events);
         })            
-        } else if(contion == 2){
+        } else if(condition == 2 ){
               Event.find({}).sort({rpl_count: 'desc'}).exec(function(err, events){
             if(err) return res.status(500).send({error: 'database failure'});
             res.json(events);
@@ -61,12 +61,41 @@ module.exports = function(app, Event)
                 res.json({result: 0});
                 return;
             }
-
             res.json({result: 1});
-
         });
     });
 
+    
+    
+    
+    app.put('/api/events/like/:pid', function(req, res){
+        Event.update({ pid: req.params.pid }, { $set: req.body }, function(err, output){
+            if(err) res.status(500).json({ error: 'database failure...Whattt' });
+            console.log(output);
+            if(!output.n) return res.status(404).json({ error: 'event not found' });
+            res.json( { message: 'event updated' } );
+        })
+    /* [ ANOTHER WAY TO UPDATE THE EVENT ]
+            Event.findById(req.params.event_id, function(err, event){
+            if(err) return res.status(500).json({ error: 'database failure' });
+            if(!event) return res.status(404).json({ error: 'event not found' });
+
+            if(req.body.title) event.title = req.body.title;
+            if(req.body.author) event.author = req.body.author;
+            if(req.body.published_date) event.published_date = req.body.published_date;
+
+            event.save(function(err){
+                if(err) res.status(500).json({error: 'failed to update'});
+                res.json({message: 'event updated'});
+            });
+
+        });
+    */
+    });
+    
+    
+    
+    
     // UPDATE THE EVENT
     app.put('/api/events/:event_id', function(req, res){
         Event.update({ _id: req.params.event_id }, { $set: req.body }, function(err, output){
