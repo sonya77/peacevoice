@@ -1,4 +1,4 @@
-module.exports = function(app, Event)
+module.exports = function(app, Event, Reply, Mem, Feel)
 {
     
     app.get('/api/test2', function(req,res){
@@ -35,8 +35,10 @@ module.exports = function(app, Event)
     });
 
     // GET SINGLE EVENT
-    app.get('/api/events/:title', function(req, res){
-        Event.findOne({title: req.params.title}, function(err, event){
+    app.get('/api/events/:pid', function(req, res){
+        var pid = req.params.pid || req.query.pid;
+        
+        Event.findOne({pid: pid}, function(err, event){
             if(err) return res.status(500).json({error: err});
             if(!event) return res.status(404).json({error: 'event not found'});
             res.json(event);
@@ -45,7 +47,98 @@ module.exports = function(app, Event)
     });   
 
     // CREATE EVENT
-    app.get('/api/eventsw', function(req, res){
+    app.use('/api/eventsWrite', function(req, res){
+        var event = new Event();
+        event.pid = req.body.pid || req.param.pid || req.query.pid;
+        event.title = req.body.title || req.param.title || req.query.title;
+        event.subtitle = req.body.subtitle || req.param.subtitle || req.query.subtitle;
+        event.content = req.body.content || req.param.content || req.query.content;
+        event.content_detail = req.body.content_detail || req.param.content_detail || req.query.content_detail;
+        event.certificate = req.body.certificate || req.param.certificate || req.query.certificate;
+        event.like = req.body.like || req.param.like || req.query.like;
+
+        event.save(function(err){
+            if(err){
+                console.error(err);
+                res.json({result: 0});
+                return;
+            }
+            console.log();
+            res.json({result: 1});
+        });
+    });
+    
+     app.post('/api/events/reply/write', function(req, res){
+        var reply = new Reply();
+        reply.pid = req.body.pid || req.param.pid || req.query.pid;
+        reply.writer = req.body.device_id || req.param.device_id || req.query.device_id;        
+        reply.text = req.body.replyText || req.param.replyText || req.query.replyText;            
+
+        reply.save(function(err){
+            if(err){
+                console.error(err);
+                res.json({result: 0});
+                return;
+            }
+            res.json({result: 1});
+        });
+    });    
+    
+    
+    app.get('/api/events/feel/:pid/:device_id/:feel', function(req, res){//!!수정예정
+            var feelStatus = new Feel();
+        
+            var i_pid = req.params.pid || req.query.pid;
+            var i_device_id = req.params.device_id || req.query.device_id || req.body.device_id;
+            var clicked = req.params.feel || req.query.feel;        
+            var yn = req.params.yn || req.query.yn;         
+        
+            feelStatus.pid = i_pid;            
+            feelStatus.device_id = i_device_id;
+        
+            if (clicked == 'like') {feelStatus.like = yn;}
+            else if(clicked == 'nolike') {feelStatus.noLike = yn;}
+            else {feelStatus.cheer = yn; }   
+            
+        
+            Feel.findOne({pid: i_pid, device_id: i_device_id}, function(err, event){                
+                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+clicked + '/' +yn);                
+                if(err) return res.status(500).json({error: err});                
+                if(!event){//console.log("!!!===== 해당 없습니다 ");                  
+                    feelStatus.save(function(err){
+                       if(err){
+                            console.error(err);
+                            res.json({result: 0});
+                            return;
+                            }
+                        res.json({result: 1});//console.log("!!!===== 새로 INSERT ");
+                        return;
+                    });                  
+                }
+                else if(event){//console.log("!!!===== 업데이트 됐습니다 ");                    
+                    if(clicked=='like'){
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {like: yn, anger: yn}},
+                        function(err, output){ console.log("!==== "+ clicked) });
+                    }
+                    else if(clicked=='nolike'){
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {noLike: yn, anger: yn}},
+                        function(err, output){ console.log("!==== "+ clicked) });
+                    }                    
+                    else {
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {cheer: yn, anger: yn}},
+                        function(err, output){ console.log("!==== "+ clicked) });                        
+                    }
+                    res.json({result: 3}); return;
+                }                
+                else {
+                    console.log("!==== "+"없는데 문제가 있어요");
+                    res.json({result: 4}); 
+                }
+            })
+    });
+  
+   /*
+     app.post('/api/events/write', function(req, res){
         var event = new Event();
         event.title = req.body.title || req.param.title || req.query.title;
         event.subtitle = req.body.subtitle || req.param.subtitle || req.query.subtitle;
@@ -63,10 +156,7 @@ module.exports = function(app, Event)
             }
             res.json({result: 1});
         });
-    });
-
-    
-    
+    });*/
     
     app.put('/api/events/like/:pid', function(req, res){
         Event.update({ pid: req.params.pid }, { $set: req.body }, function(err, output){

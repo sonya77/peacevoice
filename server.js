@@ -20,10 +20,13 @@ db.once('open', function(){
 });
 
 //mongoose.connect('mongodb://ec2-52-78-138-9.ap-northeast-2.compute.amazonaws.com/local');
-mongoose.connect('mongodb://localhost/local');
+mongoose.connect('mongodb://localhost/local');//, { useMongoClient: true }
 
 // DEFINE MODEL
 var Event = require('./models/event');
+var Reply = require('./models/reply');
+var Mem = require('./models/mem');
+var Feel = require('./models/feel');
 
 // [CONFIGURE APP TO USE bodyParser]
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -31,17 +34,17 @@ app.use(bodyParser.json());
 app.set('views', __dirname+'/views');
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
-console.log('뷰 엔진이 ejs로 설정되었습니다.');
+//console.log('뷰 엔진이 ejs로 설정되었습니다.');
 
 // public 폴더를 static으로 오픈
 //app.use('/public', static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 
 // [CONFIGURE SERVER PORT]
-var port = process.env.PORT || 80;
+var port = process.env.PORT || 8080;
 
 // [CONFIGURE ROUTER]
-var router = require('./routes')(app, Event);
+var router = require('./routes')(app, Event, Reply, Mem, Feel);
 
 // [RUN SERVER]
 var server = app.listen(port, function(){
