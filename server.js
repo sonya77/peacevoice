@@ -40,11 +40,22 @@ app.engine('html', require('ejs').renderFile);
 //app.use('/public', static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 
+
+var multiparty = require('multiparty');
+
 // [CONFIGURE SERVER PORT]
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 3000;
 
 // [CONFIGURE ROUTER]
 var router = require('./routes')(app, Event, Reply, Mem, Feel);
+
+   const multer = require('multer');
+    // 기타 express 코드
+    const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
+    app.post('/up', upload.single('img'), (req, res) => {
+      console.log(req.file); 
+    });
+
 
 // [RUN SERVER]
 var server = app.listen(port, function(){

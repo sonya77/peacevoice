@@ -1,0 +1,113 @@
+db.events.save({
+       "_id" : 1,
+        "pid" : "1",
+        "title" : "불법촬영 편파수사 규탄시위",
+        "subtitle" : "4차 시위",
+        "host" : "다음카페 불편한 용기",
+        "content" : "누구도 분노에 찬 여성들의 목소리를 막을 수 없다",
+        "startTime" : 9,
+        "endTime" : 17,
+        "place" : [
+                {
+                        "placeName" : "광화문",
+                        "location" : "서울특별시 종로구 사직로 161",
+                        "lat" : "37.5771472",
+                        "lng" : "126.9746428"
+                },
+                {
+                        "placeName" : "서울시청광장",
+                        "location" : "서울특별시 중구 세종대로 110",
+                        "lat" : "37.5688209",
+                        "lng" : "126.9725425"
+                }
+        ],
+        "certificate" : "abc.jpg",
+        "like" : 4,
+        "rpl_count" : 1,
+        "noLike_count" : 2,
+        "confirm" : 1
+})
+
+,
+db.events.save({
+        "_id" : 2,
+        "pid" : "2",
+        "title" : "서울퀴어퍼레이드",
+        "subtitle" : "퀴어모인다",
+        "host" : "퀴어집단",
+        "content" : "퀴어퀴어하다",
+        "startTime" : 11,
+        "endTime" : 18,
+        "place" : [
+                {
+                        "placeName" : "광화문",
+                        "location" : "서울특별시 종로구 사직로 161",
+                        "lat" : "37.5759040912",
+                        "lng" : "126.9768429263"
+                },
+                {
+                        "placeName" : "청계광장",
+                        "location" : "서울특별시 종로구 서린동 14-1",
+                        "lat" : "37.5693998935",
+                        "lng" : "126.9825816355"
+                },
+                {
+                        "placeName" : "탑골공원",
+                        "location" : "서울특별시 종로구 종로 99",
+                        "lat" : "37.5706115125",
+                        "lng" : "126.9880600543"
+                }
+        ],
+        "certificate" : "edf.jpg",
+        "like" : 7,
+        "rpl_count" : 3,
+        "noLike_count" : 3,
+        "confirm" : 1
+})
+
+db.events.save({
+        "_id" : 3,
+        "pid" : "3",
+        "title" : "난민 수용을 반대",
+        "subtitle" : "2차 집회",
+        "host" : "난민반대 국민행동",
+        "content" : "난민노노",
+        "startTime" : 10,
+        "endTime" : 20,
+        "place" : [
+                {
+                        "placeName" : "탑골공원",
+                        "location" : "서울특별시 종로구 종로 99",
+                        "lat" : "37.5706115125",
+                        "lng" : "126.9880600543"
+                }
+        ],
+        "certificate" : "ghi.jpg",
+        "like" : 12,
+        "rpl_count" : 15,
+        "noLike_count" : 5,
+        "confirm" : 1
+}),
+db.events.save({
+        "_id" : 4,
+        "pid" : "4",
+        "title" : "임시 데이터",
+        "subtitle" : "끝까지 홧팅합시다",
+        "host" : "우리팀",
+        "content" : "레츠고",
+        "startTime" : 10,
+        "endTime" : 20,
+        "place" : [
+                {
+                        "placeName" : "탑골공원",
+                        "location" : "서울특별시 종로구 종로 99",
+                        "lat" : "37.5706115125",
+                        "lng" : "126.9880600543"
+                }
+        ],
+        "certificate" : "ghi.jpg",
+        "like" : 12,
+        "rpl_count" : 15,
+        "noLike_count" : 5,
+        "confirm" : 1
+})

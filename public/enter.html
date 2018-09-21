@@ -7,7 +7,6 @@
 		<title>로그인</title>
 		
 		<link href="./semantic.min.css" rel="stylesheet" >
-
 		<style>
 			* {
 				padding:0;
@@ -102,7 +101,7 @@
 					</div>
 				 </div>
 			
-				<form id="form1" method="get" action="/api/eventsw">
+				<form id="form1" method="get" action="/api/eventsWrite">
 					<table>
 						<tr class="row">
 							<td class="col1"><label id="contentsText">제목</label></td>
@@ -197,9 +196,16 @@
                         <input class="inputbox" type="text" size="10" name="pid" /> 율마z_pid
                          <input class="inputbox" type="text" ssize="10" name="device_id" /> 유칼립_device_id
                          <input class="inputbox" type="text" size="10" name="replyText" /> 산세_replyText <p><br>
-                            <input type="submit" value="등록"></p>
+                            <input type="submit" value="등록"></p></div>
                         
-                    </form>
+                </form>
+                
+                
+                
+               <form action="/up" method="post" enctype="multipart/form-data">
+                <input type="file" name="test_file">
+                <button type="submit">전송</button>
+            </form>
 			</div>
 			
 		</div>

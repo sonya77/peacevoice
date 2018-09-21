@@ -1,5 +1,12 @@
 module.exports = function(app, Event, Reply, Mem, Feel)
 {
+    const multer = require('multer');
+    // 기타 express 코드
+    const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
+    app.post('/up', upload.single('img'), (req, res) => {
+      console.log(req.file); 
+    });
+    
     
     app.get('/api/test2', function(req,res){
         var aa = {"id":5, name:"jade", hobbies: new Array('a','b','c')
@@ -10,11 +17,11 @@ module.exports = function(app, Event, Reply, Mem, Feel)
                  }};
         console.log(aa);       
         res.send(aa);       
-    });    
+    });
     
     // GET ALL EVENTS
     app.get('/api/eventsAll', function(req,res){
-        var condition = req.param.condition || req.query.condition;
+        var condition = req.params.condition || req.query.condition;
         
         if(condition == 1){
             Event.find({}).sort({like: 'desc'}).exec(function(err, events){
@@ -35,9 +42,9 @@ module.exports = function(app, Event, Reply, Mem, Feel)
     });
 
     // GET SINGLE EVENT
-    app.get('/api/events/:pid', function(req, res){
+    app.use('/api/eventsOne', function(req, res){
         var pid = req.params.pid || req.query.pid;
-        
+        console.log("!==="+pid);
         Event.findOne({pid: pid}, function(err, event){
             if(err) return res.status(500).json({error: err});
             if(!event) return res.status(404).json({error: 'event not found'});
@@ -49,13 +56,13 @@ module.exports = function(app, Event, Reply, Mem, Feel)
     // CREATE EVENT
     app.use('/api/eventsWrite', function(req, res){
         var event = new Event();
-        event.pid = req.body.pid || req.param.pid || req.query.pid;
-        event.title = req.body.title || req.param.title || req.query.title;
-        event.subtitle = req.body.subtitle || req.param.subtitle || req.query.subtitle;
-        event.content = req.body.content || req.param.content || req.query.content;
-        event.content_detail = req.body.content_detail || req.param.content_detail || req.query.content_detail;
-        event.certificate = req.body.certificate || req.param.certificate || req.query.certificate;
-        event.like = req.body.like || req.param.like || req.query.like;
+        event.pid = req.body.pid || req.params.pid || req.query.pid;
+        event.title = req.body.title || req.params.title || req.query.title;
+        event.subtitle = req.body.subtitle || req.params.subtitle || req.query.subtitle;
+        event.content = req.body.content || req.params.content || req.query.content;
+        event.content_detail = req.body.content_detail || req.params.content_detail || req.query.content_detail;
+        event.certificate = req.body.certificate || req.params.certificate || req.query.certificate;
+        event.like = req.body.like || req.params.like || req.query.like;
 
         event.save(function(err){
             if(err){
@@ -68,11 +75,12 @@ module.exports = function(app, Event, Reply, Mem, Feel)
         });
     });
     
-     app.post('/api/events/reply/write', function(req, res){
+     app.use('/api/events/reply/write', function(req, res){
         var reply = new Reply();
-        reply.pid = req.body.pid || req.param.pid || req.query.pid;
-        reply.writer = req.body.device_id || req.param.device_id || req.query.device_id;        
-        reply.text = req.body.replyText || req.param.replyText || req.query.replyText;            
+        var i_pid = req.body.pid || req.params.pid || req.query.pid;
+        reply.pid = req.body.pid || req.params.pid || req.query.pid;
+        reply.writer = req.body.device_id || req.params.device_id || req.query.device_id;        
+        reply.text = req.body.replyText || req.params.replyText || req.query.replyText;            
 
         reply.save(function(err){
             if(err){
@@ -80,7 +88,16 @@ module.exports = function(app, Event, Reply, Mem, Feel)
                 res.json({result: 0});
                 return;
             }
+             console.log("!==== "+ "댓글작성됨 / "+i_pid+"번 이벤트.");
             res.json({result: 1});
+            
+            Event.update({pid: i_pid}, {$inc: {rpl_count: 1}},
+                         function(err, output){ 
+                            if(err){
+                                console.log(err); return;
+                            }
+                            console.log("!==== "+ "업데이트도됨");
+                        });
         });
     });    
     
@@ -102,7 +119,7 @@ module.exports = function(app, Event, Reply, Mem, Feel)
             
         
             Feel.findOne({pid: i_pid, device_id: i_device_id}, function(err, event){                
-                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+clicked + '/' +yn);                
+                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+clicked + '/' +yn);      
                 if(err) return res.status(500).json({error: err});                
                 if(!event){//console.log("!!!===== 해당 없습니다 ");                  
                     feelStatus.save(function(err){
