@@ -51,8 +51,9 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
 
     // GET SINGLE EVENT
     app.use('/api/eventsOne', function(req, res){
-        var pid = req.params.pid || req.query.pid;       
-        var data1 = null, data2 = null; // @null아니면? undefined
+        var pid = req.params.pid || req.query.pid;  
+        var device_id = req.params.device_id || req.query.device_id;  
+        var data1 = null, data2 = null, date3 = null; // @null아니면? undefined
         var resultData = new Object();
         
         Event.findOne({pid: pid}, function(err, event){
@@ -62,11 +63,16 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
             data1 = event;
             resultData.data1 = data1;
             
-            Reply.find({pid: pid}).sort({regdate: 'desc'}).exec(function(err, event){
+            Reply.findOne({pid: pid}).sort({regdate: 'desc'}).exec(function(err, event){
                 data2 = event;         
-                resultData.data2 = data2;            
-                console.log(resultData);
-                res.json(resultData);
+                resultData.data2 = data2;                
+                
+                Feel.find({pid: pid }).exec(function(err, event){//, device_id: device_id
+                    data3 = event;         
+                    resultData.data3 = data3;            
+                    console.log(resultData);
+                    res.json(resultData);
+                })  
             })  
         })
      }); 
@@ -171,35 +177,32 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
     });    
     
     
-    app.get('/api/events/feel', function(req, res){//!!수정예정
+    app.use('/api/events/feel', function(req, res){//!!수정예정
             var feelStatus = new Feel();
         
-            var i_pid = req.params.pid || req.query.pid;
+            var i_pid = req.params.pid || req.query.pid || req.body.pid;
             var i_device_id = req.params.device_id || req.query.device_id || req.body.device_id;
-            //var feel = req.params.feel || req.query.feel || req.body.feel;
-            var clicked = req.params.feel || req.query.feel;        
-            var yn = req.params.yn || req.query.yn;         
+            var i_feel = req.params.feel || req.query.feel || req.body.feel;        
+            var yn = req.params.yn || req.query.yn || req.body.yn;
+            console.log(i_pid+ '/' + i_device_id + '/' + i_feel + '/' + yn);
         
             feelStatus.pid = i_pid;            
             feelStatus.device_id = i_device_id;
             //code - like:0, nolike:1, cheer:2, sad:3, anger:4
-            if (clicked == 0 ) {feelStatus.like = yn;}
-            else if(clicked == 1) {feelStatus.nolike = yn;}
-            else if(clicked == 2) {feelStatus.cheer = yn;}
-            else if(clicked == 3) {feelStatus.sad = yn;}
+            if (i_feel == 0 ) {feelStatus.like = yn;}
+            else if(i_feel == "1" || i_feel == 1) {feelStatus.nolike = yn; console.log('-------workkk');}
+            else if(i_feel == 2) {feelStatus.cheer = yn;}
+            else if(i_feel == 3) {feelStatus.sad = yn;}
             else {feelStatus.anger = yn; }
         
-            Event.update({pid: i_pid}, {$inc: {rpl_count: 1}},
-                         function(err, output){ 
-                            if(err){
-                                console.log(err); return res.status(500).json({error: err});
-                            }
+            Event.update({pid: i_pid}, {$inc: {cheer_count: 1}},//mongoose안에 js들어가야함..new가아닌데될까?
+                         function(err, output){
+                            if(err){ console.log(err); return res.status(500).json({error: err}); }
                             console.log("!==== "+ "업데이트도됨");
                         });
-                
         
             Feel.findOne({pid: i_pid, device_id: i_device_id}, function(err, event){                
-                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+clicked + '/' +yn);
+                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+i_feel + '/' +yn);
                 if(err) {return res.status(500).json({error: err});}
                 if(!event){//console.log("!!!===== 해당 없습니다 ");                  
                     feelStatus.save(function(err){
@@ -207,30 +210,34 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
                             console.error(err);
                             return res.status(500).json({error: err});
                             }
-                        res.json({result: 1});//console.log("!!!===== 새로 INSERT ");
+                        res.json({result: 1, kind: "save"});//console.log("!!!===== 새로 INSERT ");
                         return;
                     });                  
                 }
-                else if(event){//console.log("!!!===== 업데이트 됐습니다 ");                    
-                    if(clicked=='like'){
-                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {like: yn, anger: yn}},
-                        function(err, output){ console.log("!==== "+ clicked) });
+                else {//console.log("!!!===== 업데이트 됐습니다 ");                    
+                    if(i_feel == 0){
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {like: yn}},
+                        function(err, output){ console.log("!==== "+ i_feel) });
                     }
-                    else if(clicked=='nolike'){
-                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {noLike: yn, anger: yn}},
-                        function(err, output){ console.log("!==== "+ clicked) });
-                    }                    
+                    else if(i_feel == 1){
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {noLike: yn}},
+                        function(err, output){ console.log("!==== "+ i_feel) });
+                    }  
+                    else if(i_feel == 2){
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {cheer: yn}},
+                        function(err, output){ console.log("!==== "+ i_feel) });
+                    }  
+                    else if(i_feel == 3){
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {sad: yn}},
+                        function(err, output){ console.log("!==== "+ i_feel) });
+                    }  
                     else {
-                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {cheer: yn, anger: yn}},
-                        function(err, output){ console.log("!==== "+ clicked) });                        
+                        Feel.update({pid: i_pid, device_id: i_device_id}, {$set: {anger: yn}},
+                        function(err, output){ console.log("!==== "+ i_feel) });                        
                     }
-                    res.json({result: 3}); return;
-                }                
-                else {
-                    console.log("!==== "+"없는데 문제가 있어요");
-                    res.json({result: 4}); 
-                }
-            })
+                    res.json({result: 1, kind: "update"}); return;
+                    }    
+                })
     });
   
    /*
