@@ -1,13 +1,14 @@
-module.exports = function(app, Event, Reply, Mem, Feel)
-{
+module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
+{   //파일첨부 하던중
+    /*
     const multer = require('multer');
     // 기타 express 코드
     const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
     app.post('/up', upload.single('img'), (req, res) => {
       console.log(req.file); 
-    });
+    }); */
     
-    
+    //Test api
     app.get('/api/test2', function(req,res){
         var aa = {"id":5, name:"jade", hobbies: new Array('a','b','c')
                  , characteristic: 
@@ -23,17 +24,24 @@ module.exports = function(app, Event, Reply, Mem, Feel)
     app.get('/api/eventsAll', function(req,res){
         var condition = req.params.condition || req.query.condition;
         
-        if(condition == 1){
+        db.products.insert({
+       "_id":getNextSequenceValue("productid"),
+       "product_name":"Apple iPhone",
+       "category":"mobiles"
+    })
+        
+        
+        if(condition == 1){//인기순 조회
             Event.find({}).sort({like: 'desc'}).exec(function(err, events){
             if(err) return res.status(500).send({error: 'database failure'});
             res.json(events);
         })            
-        } else if(condition == 2 ){
+        } else if(condition == 2 ){//댓글순 조회
               Event.find({}).sort({rpl_count: 'desc'}).exec(function(err, events){
             if(err) return res.status(500).send({error: 'database failure'});
             res.json(events);
         })
-        } else{
+        } else{//최신순 조회
             Event.find({}).sort({regdate: 'desc'}).exec(function(err, events){
                 if(err) return res.status(500).send({error: 'database failure'});
                 res.json(events);
@@ -43,17 +51,66 @@ module.exports = function(app, Event, Reply, Mem, Feel)
 
     // GET SINGLE EVENT
     app.use('/api/eventsOne', function(req, res){
-        var pid = req.params.pid || req.query.pid;
-        console.log("!==="+pid);
+        var pid = req.params.pid || req.query.pid;       
+        var data1 = null, data2 = null; // @null아니면? undefined
+        var resultData = new Object();
+        
         Event.findOne({pid: pid}, function(err, event){
             if(err) return res.status(500).json({error: err});
             if(!event) return res.status(404).json({error: 'event not found'});
-            res.json(event);
+            
+            data1 = event;
+            resultData.data1 = data1;
+            
+            Reply.find({pid: pid}).sort({regdate: 'desc'}).exec(function(err, event){
+                data2 = event;         
+                resultData.data2 = data2;            
+                console.log(resultData);
+                res.json(resultData);
+            })  
+        })
+     }); 
+        // No use
+        /*
+        Event.findOne({pid: pid}, function(err, event){
+            if(err) return res.status(500).json({error: err});
+            if(!event) return res.status(404).json({error: 'event not found'});
+            data1 = event;
+            res.json(data1);
+            //resultData.aa = data1;
             //res.send(event);
         })
-    });   
+        
+        Reply.find({pid: pid}).exec(function(err, event){
+           // console.log(event);
+            data2 = event;
+            console.log("!====! 왜 저장이 !===! "+data2);          
+            resultData.bb = data2;
+        }) */        
+     
 
-    // CREATE EVENT
+    
+    //SEARCH EVENT
+      app.get('/api/searchEvent', function(req,res){
+        var keyword = req.params.keyword || req.query.keyword || "";// console.log("!=="+keyword);
+          //검색어 없이 조회할시, 전체 최신순 검색 결과
+          if ( keyword=="" || keyword == null ){
+                Event.find({}).sort({regdate: 'desc'}).exec(function(err, events){
+                if(err) return res.status(500).send({error: 'Error!'});
+                res.json(events);
+                })              
+          }
+          else { //검색어가 title, subtitle에 들어간 게시물 조회
+               Event.find({ $or: [ {title: {$regex: keyword}}, {subtitle: {$regex: keyword }}] }).exec(function(err, events){
+                        if(err) return res.status(500).send({error: 'Error!'});
+                        console.log("!!!"+events);
+                        res.json(events);  
+                })
+          }
+    });
+      
+    
+    // CREATE(INSERT) EVENT
     app.use('/api/eventsWrite', function(req, res){
         var event = new Event();
         event.pid = req.body.pid || req.params.pid || req.query.pid;
@@ -69,12 +126,25 @@ module.exports = function(app, Event, Reply, Mem, Feel)
                 console.error(err);
                 res.json({result: 0});
                 return;
-            }
-            console.log();
+            }            
+            //@@new added
+            /*Ecounter.update({_id: "num"}, {$inc: {seq: 1}},
+                         function(err, output){ 
+                            if(err){
+                                console.log(err); return res.status(500).json({error: err});
+                            }
+                            console.log("!==== "+ "전체 이벤트 개수 +1");
+                        });*/s
+            //console.log('insert성공');
+            
             res.json({result: 1});
         });
+        
+        //Ecounter
+        
     });
     
+    // CREATE(INSERT) REPLY
      app.use('/api/events/reply/write', function(req, res){
         var reply = new Reply();
         var i_pid = req.body.pid || req.params.pid || req.query.pid;
@@ -85,8 +155,7 @@ module.exports = function(app, Event, Reply, Mem, Feel)
         reply.save(function(err){
             if(err){
                 console.error(err);
-                res.json({result: 0});
-                return;
+                return res.status(500).json({error: err});
             }
              console.log("!==== "+ "댓글작성됨 / "+i_pid+"번 이벤트.");
             res.json({result: 1});
@@ -94,7 +163,7 @@ module.exports = function(app, Event, Reply, Mem, Feel)
             Event.update({pid: i_pid}, {$inc: {rpl_count: 1}},
                          function(err, output){ 
                             if(err){
-                                console.log(err); return;
+                                console.log(err); return res.status(500).json({error: err});
                             }
                             console.log("!==== "+ "업데이트도됨");
                         });
@@ -102,31 +171,41 @@ module.exports = function(app, Event, Reply, Mem, Feel)
     });    
     
     
-    app.get('/api/events/feel/:pid/:device_id/:feel', function(req, res){//!!수정예정
+    app.get('/api/events/feel', function(req, res){//!!수정예정
             var feelStatus = new Feel();
         
             var i_pid = req.params.pid || req.query.pid;
             var i_device_id = req.params.device_id || req.query.device_id || req.body.device_id;
+            //var feel = req.params.feel || req.query.feel || req.body.feel;
             var clicked = req.params.feel || req.query.feel;        
             var yn = req.params.yn || req.query.yn;         
         
             feelStatus.pid = i_pid;            
             feelStatus.device_id = i_device_id;
+            //code - like:0, nolike:1, cheer:2, sad:3, anger:4
+            if (clicked == 0 ) {feelStatus.like = yn;}
+            else if(clicked == 1) {feelStatus.nolike = yn;}
+            else if(clicked == 2) {feelStatus.cheer = yn;}
+            else if(clicked == 3) {feelStatus.sad = yn;}
+            else {feelStatus.anger = yn; }
         
-            if (clicked == 'like') {feelStatus.like = yn;}
-            else if(clicked == 'nolike') {feelStatus.noLike = yn;}
-            else {feelStatus.cheer = yn; }   
-            
+            Event.update({pid: i_pid}, {$inc: {rpl_count: 1}},
+                         function(err, output){ 
+                            if(err){
+                                console.log(err); return res.status(500).json({error: err});
+                            }
+                            console.log("!==== "+ "업데이트도됨");
+                        });
+                
         
             Feel.findOne({pid: i_pid, device_id: i_device_id}, function(err, event){                
-                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+clicked + '/' +yn);      
-                if(err) return res.status(500).json({error: err});                
+                //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+clicked + '/' +yn);
+                if(err) {return res.status(500).json({error: err});}
                 if(!event){//console.log("!!!===== 해당 없습니다 ");                  
                     feelStatus.save(function(err){
                        if(err){
                             console.error(err);
-                            res.json({result: 0});
-                            return;
+                            return res.status(500).json({error: err});
                             }
                         res.json({result: 1});//console.log("!!!===== 새로 INSERT ");
                         return;
@@ -175,6 +254,8 @@ module.exports = function(app, Event, Reply, Mem, Feel)
         });
     });*/
     
+    //No use
+    /* 
     app.put('/api/events/like/:pid', function(req, res){
         Event.update({ pid: req.params.pid }, { $set: req.body }, function(err, output){
             if(err) res.status(500).json({ error: 'database failure...Whattt' });
@@ -197,14 +278,12 @@ module.exports = function(app, Event, Reply, Mem, Feel)
             });
 
         });
-    */
-    });
+   *
+    });    */
     
     
-    
-    
-    // UPDATE THE EVENT
-    app.put('/api/events/:event_id', function(req, res){
+    // No Use - UPDATE THE EVENT
+   /* app.put('/api/events/:event_id', function(req, res){
         Event.update({ _id: req.params.event_id }, { $set: req.body }, function(err, output){
             if(err) res.status(500).json({ error: 'database failure' });
             console.log(output);
@@ -226,10 +305,11 @@ module.exports = function(app, Event, Reply, Mem, Feel)
             });
 
         });
-    */
-    });
+    *
+    });*/
 
-    // DELETE EVENT
+    // No Use - DELETE EVENT
+    /*
     app.delete('/api/events/:event_id', function(req, res){
         Event.remove({ _id: req.params.event_id }, function(err, output){
             if(err) return res.status(500).json({ error: "database failure" });
@@ -237,10 +317,10 @@ module.exports = function(app, Event, Reply, Mem, Feel)
             /* ( SINCE DELETE OPERATION IS IDEMPOTENT, NO NEED TO SPECIFY )
             if(!output.result.n) return res.status(404).json({ error: "event not found" });
             res.json({ message: "event deleted" });
-            */
+            *
 
             res.status(204).end();
         })
-    });
+    });*/
      
 }

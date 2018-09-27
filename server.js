@@ -20,13 +20,15 @@ db.once('open', function(){
 });
 
 //mongoose.connect('mongodb://ec2-52-78-138-9.ap-northeast-2.compute.amazonaws.com/local');
-mongoose.connect('mongodb://localhost/local');//, { useMongoClient: true }
+mongoose.connect('mongodb://localhost/local');//, { useMongoClient: true }//52.78.138.9 mongodb://localhost/siwi
 
 // DEFINE MODEL
 var Event = require('./models/event');
 var Reply = require('./models/reply');
 var Mem = require('./models/mem');
 var Feel = require('./models/feel');
+var Ecounter = require('./models/ecounter');
+
 
 // [CONFIGURE APP TO USE bodyParser]
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -40,22 +42,11 @@ app.engine('html', require('ejs').renderFile);
 //app.use('/public', static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 
-
-var multiparty = require('multiparty');
-
 // [CONFIGURE SERVER PORT]
 var port = process.env.PORT || 3000;
 
 // [CONFIGURE ROUTER]
-var router = require('./routes')(app, Event, Reply, Mem, Feel);
-
-   const multer = require('multer');
-    // 기타 express 코드
-    const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
-    app.post('/up', upload.single('img'), (req, res) => {
-      console.log(req.file); 
-    });
-
+var router = require('./routes')(app, Event, Reply, Mem, Feel, Ecounter);
 
 // [RUN SERVER]
 var server = app.listen(port, function(){
