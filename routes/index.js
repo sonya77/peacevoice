@@ -23,12 +23,8 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
     // GET ALL EVENTS
     app.get('/api/eventsAll', function(req,res){
         var condition = req.params.condition || req.query.condition;
-        
-        db.products.insert({
-       "_id":getNextSequenceValue("productid"),
-       "product_name":"Apple iPhone",
-       "category":"mobiles"
-    })
+       
+
         
         
         if(condition == 1){//인기순 조회
@@ -189,10 +185,10 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
             feelStatus.pid = i_pid;            
             feelStatus.device_id = i_device_id;
             //code - like:0, nolike:1, cheer:2, sad:3, anger:4
-            if (i_feel == 0 ) {feelStatus.like = yn;}
+            if (i_feel == "0" || i_feel == 0 ) {feelStatus.like = yn;}
             else if(i_feel == "1" || i_feel == 1) {feelStatus.nolike = yn; console.log('-------workkk');}
-            else if(i_feel == 2) {feelStatus.cheer = yn;}
-            else if(i_feel == 3) {feelStatus.sad = yn;}
+            else if(i_feel == "2" || i_feel == 2) {feelStatus.cheer = yn;}
+            else if(i_feel == "3" ||i_feel == 3) {feelStatus.sad = yn;}
             else {feelStatus.anger = yn; }
         
             Event.update({pid: i_pid}, {$inc: {cheer_count: 1}},//mongoose안에 js들어가야함..new가아닌데될까?

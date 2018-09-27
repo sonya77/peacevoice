@@ -17,7 +17,7 @@ var eventSchema = new Schema({
     regdate: { type: Date, default: Date.now  },
     editdate: { type: Date, default: Date.now  },
     rpl_count: { type: Number, default: 0  },
-    like: { type: Number, default: 0  },
+    like_count: { type: Number, default: 0  },
     noLike_count: { type: Number, default: 0  },
     
     cheer_count: { type: Number, default: 0  },
