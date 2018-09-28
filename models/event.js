@@ -8,7 +8,7 @@ var eventSchema = new Schema({
     host: String,
     content: String,
     content_detail: String,    
-    date: { type: Date, default: Date.now  },
+    date: { type: Number, default: 0  },
     startTime: { type: Number, default: 0 },
     endTime: { type: Number, default: 0 },    
     place: Object,    

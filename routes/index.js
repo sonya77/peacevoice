@@ -59,11 +59,11 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
             data1 = event;
             resultData.data1 = data1;
             
-            Reply.findOne({pid: pid}).sort({regdate: 'desc'}).exec(function(err, event){
+            Reply.find({pid: pid}).sort({regdate: 'desc'}).exec(function(err, event){
                 data2 = event;         
                 resultData.data2 = data2;                
                 
-                Feel.find({pid: pid }).exec(function(err, event){//, device_id: device_id
+                Feel.findOne({pid: pid, device_id: device_id }).exec(function(err, event){//, device_id: device_id
                     data3 = event;         
                     resultData.data3 = data3;            
                     console.log(resultData);
@@ -173,29 +173,62 @@ module.exports = function(app, Event, Reply, Mem, Feel, Ecounter)
     });    
     
     
-    app.use('/api/events/feel', function(req, res){//!!수정예정
+    app.use('/api/events/feel', function(req, res){
             var feelStatus = new Feel();
         
             var i_pid = req.params.pid || req.query.pid || req.body.pid;
             var i_device_id = req.params.device_id || req.query.device_id || req.body.device_id;
             var i_feel = req.params.feel || req.query.feel || req.body.feel;        
-            var yn = req.params.yn || req.query.yn || req.body.yn;
-            console.log(i_pid+ '/' + i_device_id + '/' + i_feel + '/' + yn);
+            var yn = req.params.yn || req.query.yn || req.body.yn; // 기존의 감정 상태: true/false
+            var va1; // event의 count 변화 값: +1/-1
         
-            feelStatus.pid = i_pid;            
+            // 클릭 시, 기존의 감정 상태의 토글값을 얻음
+            if (yn == true || yn == 1) { 
+                yn = false; 
+                val1 = -1; }
+            else { 
+                yn = true; 
+                val1 = 1; }//console.log(i_pid+ '/' + i_device_id + '/' + i_feel + '/' + yn);//체크
+        
+            feelStatus.pid = i_pid; 
             feelStatus.device_id = i_device_id;
-            //code - like:0, nolike:1, cheer:2, sad:3, anger:4
-            if (i_feel == "0" || i_feel == 0 ) {feelStatus.like = yn;}
-            else if(i_feel == "1" || i_feel == 1) {feelStatus.nolike = yn; console.log('-------workkk');}
-            else if(i_feel == "2" || i_feel == 2) {feelStatus.cheer = yn;}
-            else if(i_feel == "3" ||i_feel == 3) {feelStatus.sad = yn;}
-            else {feelStatus.anger = yn; }
         
-            Event.update({pid: i_pid}, {$inc: {cheer_count: 1}},//mongoose안에 js들어가야함..new가아닌데될까?
-                         function(err, output){
+            //클릭된 감정의 종류에 따라 (code값 - like:0, nolike:1, cheer:2, sad:3, anger:4)
+            if (i_feel == "0" || i_feel == 0 ) {
+                feelStatus.like = yn;                
+                Event.update({pid: i_pid}, {$inc: {like_count: val1}},//mongoose안에 js들어가야함..new가아닌데될까?
+                         function(err){
                             if(err){ console.log(err); return res.status(500).json({error: err}); }
-                            console.log("!==== "+ "업데이트도됨");
                         });
+            }
+            else if(i_feel == "1" || i_feel == 1) {
+                feelStatus.nolike = yn;
+                Event.update({pid: i_pid}, {$inc: {noLike_count: val1}},//mongoose안에 js들어가야함..new가아닌데될까?
+                         function(err){
+                            if(err){ console.log(err); return res.status(500).json({error: err}); }
+                        });            
+            }
+            else if(i_feel == "2" || i_feel == 2) {
+                feelStatus.cheer = yn;
+                 Event.update({pid: i_pid}, {$inc: {cheer_count: val1}},//mongoose안에 js들어가야함..new가아닌데될까?
+                         function(err){
+                            if(err){ console.log(err); return res.status(500).json({error: err}); }
+                        });
+            }
+            else if(i_feel == "3" ||i_feel == 3) {
+                feelStatus.sad = yn;
+                 Event.update({pid: i_pid}, {$inc: {sad_count: val1}},//mongoose안에 js들어가야함..new가아닌데될까?
+                         function(err){
+                            if(err){ console.log(err); return res.status(500).json({error: err}); }
+                        });
+            }
+            else {
+                feelStatus.anger = yn;
+                 Event.update({pid: i_pid}, {$inc: {anger_count: val1}},//mongoose안에 js들어가야함..new가아닌데될까?
+                         function(err){
+                            if(err){ console.log(err); return res.status(500).json({error: err}); }
+                        });       
+            }        
         
             Feel.findOne({pid: i_pid, device_id: i_device_id}, function(err, event){                
                 //console.log('!!!===== findOne 시도 : '+ i_pid+'/'+i_device_id+'/'+i_feel + '/' +yn);
