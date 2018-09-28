@@ -19,8 +19,20 @@ db.once('open', function(){
     console.log("Connected to mongod server");
 });
 
-//mongoose.connect('mongodb://ec2-52-78-138-9.ap-northeast-2.compute.amazonaws.com/local');
-mongoose.connect('mongodb://localhost/local');//, { useMongoClient: true }//52.78.138.9 mongodb://localhost/siwi
+//mongoose.connect('mongodb://ubuntu:ubuntu@54.180.8.237:27017/siwi');//, { useMongoClient: true }//52.78.138.9 mongodb://localhost/siwi
+
+
+
+const connectOptions = { 
+  useMongoClient: true,
+  autoReconnect: true
+};
+
+const uri = 'mongodb://54.180.8.237:27017/siwi';
+
+mongoose.Promise = global.Promise;
+
+mongoose.connect(uri, connectOptions);
 
 // DEFINE MODEL
 var Event = require('./models/event');
